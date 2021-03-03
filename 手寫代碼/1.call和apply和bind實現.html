@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        var value = 1
+        var obj = {
+            value:2
+        }
+        function say(name,age){
+            console.log(this.value,name,age)
+        }
+        // 1.簡單實現apply
+        /**
+         *在调用一个存在的函数时，你可以为其指定一个 this 对象。 this 指当前对象，也就是正在调用这个函数的对象。 使用 apply， 你可以只写一次这个方法然后在另一个对象中继承它，而不用在新对象中重复写该方法。 
+         */
+        Function.prototype.apply1 = function(contetx,arr){
+            var context = context || window 
+            context.fn = this 
+            var result
+            // 判斷有無參數
+            if(!arr){
+                result = context.fn()
+            }else{
+                let args = []
+                for(let i = 0;i<arr.length;i++){
+                    args.push('arr['+i+']')
+                }
+                result = eval('context.fn('+args+')')
+            }
+            delete context.fn
+            return result
+        }
+        // say()
+        // say.apply(obj,['xx','18'])
+        // say.apply1(obj,['yy','19'])
+        // 2.簡單實現call
+        // call()方法接受的是参数列表，而apply()方法接受的是一个参数数组。
+        Function.prototype.call1 = function(context){
+            var context = context || window 
+            // 首先要获取调用call的函数，用this可以获取
+            context.fn = this
+            let args = []
+            // 從第二個參數開始接受為新的參數
+            for(let i = 1;i<arguments.length;i++){
+                args.push('arguments['+i+']')
+            }
+            const result = eval('context.fn('+args+')')
+            delete context.fn
+            return result
+        }
+        // say()
+        // say.call(obj,'xx','18')
+        // say.call1(obj,'yy','19')
+        // 3.bind實現
+        // bind() 方法创建一个新的函数，在 bind() 被调用时，这个新函数的 this 被指定为 bind() 的第一个参数，而其余参数将作为新函数的参数，供调用时使(mdn解釋)
+        var foo = {
+            value: 1
+        };
+
+        function bar() {
+            console.log(this.value);
+        }
+
+        // 返回了一个函数
+        var bindFoo = bar.bind(foo); 
+
+        bindFoo(); // 1
+
+
+        Function.prototype.bind2 = function (context) {
+            var self = this;
+            // 取bind2函数从第二个参数到最后一个参数
+            var args = Array.prototype.slice.call(arguments, 1);
+            var fbound = function () {
+                var bindArgs = Array.prototype.slice.call(arguments);
+                // 当作为构造函数时，this 指向实例，self 指向绑定函数，因为下面一句 `fbound.prototype = this.prototype;`，已经修改了 fbound.prototype 为 绑定函数的 prototype，此时结果为 true，当结果为 true 的时候，this 指向实例。
+                // 当作为普通函数时，this 指向 window，self 指向绑定函数，此时结果为 false，当结果为 false 的时候，this 指向绑定的 context。
+                self.apply(this instanceof self ? this : context, args.concat(bindArgs));
+            }
+            // 修改返回函数的 prototype 为绑定函数的 prototype，实例就可以继承函数的原型中的值
+            fbound.prototype = this.prototype;
+            return fbound;
+        }
+        var bindFoo2 = bar.bind2(foo)
+        bindFoo2()
+    </script>
+</body>
+</html>
